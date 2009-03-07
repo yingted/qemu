@@ -431,6 +431,7 @@ static int sys_unlinkat(int dirfd, const char *pathname, int flags)
 /*
  * Try direct syscalls instead
  */
+_syscall1(int,sys_uname,struct new_utsname *,buf)
 #if defined(TARGET_NR_faccessat) && defined(__NR_faccessat)
 _syscall3(int,sys_faccessat,int,dirfd,const char *,pathname,int,mode)
 #endif

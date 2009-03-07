@@ -43,6 +43,7 @@
 #endif
 
 #define CPUArchState struct CPUX86State
+#define CPUState struct CPUX86State
 
 #include "cpu-defs.h"
 
@@ -972,6 +973,7 @@ static inline CPUX86State *cpu_init(const char *cpu_model)
     return &cpu->env;
 }
 
+#define cpu_init cpu_x86_init
 #define cpu_exec cpu_x86_exec
 #define cpu_gen_code cpu_x86_gen_code
 #define cpu_signal_handler cpu_x86_signal_handler
