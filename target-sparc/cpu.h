@@ -24,6 +24,8 @@
 
 #define CPUState struct CPUSPARCState
 
+#define CPUState struct CPUSPARCState
+
 #include "cpu-defs.h"
 
 #include "softfloat.h"
