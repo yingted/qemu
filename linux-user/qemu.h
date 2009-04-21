@@ -246,6 +246,7 @@ int target_msync(abi_ulong start, abi_ulong len, int flags);
 extern unsigned long last_brk;
 void mmap_lock(void);
 void mmap_unlock(void);
+abi_ulong mmap_find_vma(abi_ulong, abi_ulong);
 void cpu_list_lock(void);
 void cpu_list_unlock(void);
 #if defined(CONFIG_USE_NPTL)
