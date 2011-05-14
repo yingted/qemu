@@ -1935,7 +1935,7 @@ static void tcg_target_qemu_prologue(TCGContext *s)
         tcg_out_push(s, tcg_target_callee_save_regs[i]);
     }
 
-    tcg_out_addi(s, TCG_REG_CALL_STACK, -stack_addend);
+    tcg_out_addi(s, TCG_REG_ESP, -stack_addend);
 
     tcg_out_mov(s, TCG_TYPE_PTR, TCG_AREG0, tcg_target_call_iarg_regs[0]);
 
