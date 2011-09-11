@@ -61,6 +61,7 @@
 #include "trace.h"
 #endif
 #include "ui/qemu-spice.h"
+#include "memory.h"
 
 //#define DEBUG
 //#define DEBUG_COMPLETION
@@ -2417,6 +2418,11 @@ static void tlb_info(Monitor *mon)
 }
 #endif
 
+static void do_info_mtree(Monitor *mon)
+{
+    mtree_info((fprintf_function)monitor_printf, mon);
+}
+
 static void do_info_kvm_print(Monitor *mon, const QObject *data)
 {
     QDict *qdict;
@@ -2919,6 +2925,13 @@ static const mon_cmd_t info_cmds[] = {
         .mhandler.info = mem_info,
     },
 #endif
+    {
+        .name       = "mtree",
+        .args_type  = "",
+        .params     = "",
+        .help       = "show memory tree",
+        .mhandler.info = do_info_mtree,
+    },
     {
         .name       = "jit",
         .args_type  = "",
