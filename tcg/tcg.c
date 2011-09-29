@@ -83,11 +83,12 @@ static int tcg_target_const_match(tcg_target_long val,
                                   const TCGArgConstraint *arg_ct);
 static int tcg_target_get_call_iarg_regs_count(int flags);
 
-static TCGOpDef tcg_op_defs[] = {
+TCGOpDef tcg_op_defs[] = {
 #define DEF(s, oargs, iargs, cargs, flags) { #s, oargs, iargs, cargs, iargs + oargs + cargs, flags },
 #include "tcg-opc.h"
 #undef DEF
 };
+const size_t tcg_op_defs_max = ARRAY_SIZE(tcg_op_defs);
 
 static TCGRegSet tcg_target_available_regs[2];
 static TCGRegSet tcg_target_call_clobber_regs;
