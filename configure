@@ -3148,6 +3148,23 @@ echo "qemu_docdir=$qemu_docdir" >> $config_host_mak
 echo "libexecdir=\${prefix}/libexec" >> $config_host_mak
 echo "CONFIG_QEMU_HELPERDIR=\"$prefix/libexec\"" >> $config_host_mak
 
+case "$cpu" in
+  i386|x86_64|alpha|cris|hppa|ia64|lm32|m68k|microblaze|mips|mips64|ppc|ppc64|s390|s390x|sparc|sparc64|unicore32)
+    ARCH=$cpu
+  ;;
+  armv4b|armv4l)
+    ARCH=arm
+  ;;
+  *)
+    if test "$tcg_interpreter" = "yes" ; then
+        echo "Unsupported CPU = $cpu, will use TCG with TCI (experimental)"
+        ARCH=tci
+    else
+        echo "Unsupported CPU = $cpu, try --enable-tcg-interpreter"
+        exit 1
+    fi
+  ;;
+esac
 echo "ARCH=$ARCH" >> $config_host_mak
 if test "$debug_tcg" = "yes" ; then
   echo "CONFIG_DEBUG_TCG=y" >> $config_host_mak
@@ -3379,6 +3396,9 @@ if test "$signalfd" = "yes" ; then
 fi
 if test "$tcg_interpreter" = "yes" ; then
   echo "CONFIG_TCG_INTERPRETER=y" >> $config_host_mak
+fi
+if test "$need_offsetof" = "yes" ; then
+  echo "CONFIG_NEED_OFFSETOF=y" >> $config_host_mak
 fi
 if test "$fdatasync" = "yes" ; then
   echo "CONFIG_FDATASYNC=y" >> $config_host_mak
