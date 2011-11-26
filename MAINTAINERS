@@ -435,6 +435,11 @@ M: qemu-devel@nongnu.org
 S: Orphan
 F: slirp/
 
+Checkpatch
+M: Blue Swirl <blauwirbel@gmail.com>
+S: Odd Fixes
+F: scripts/checkpatch.pl
+
 Usermode Emulation
 ------------------
 BSD user
