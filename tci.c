@@ -58,7 +58,7 @@ CPUState *env;
 /* Targets which don't use GETPC also don't need tci_tb_ptr
    which makes them a little faster. */
 #if defined(GETPC)
-void *tci_tb_ptr;
+uintptr_t tci_tb_ptr;
 #endif
 
 static tcg_target_ulong tci_reg[TCG_TARGET_NB_REGS];
@@ -450,7 +450,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 
     for (;;) {
 #if defined(GETPC)
-        tci_tb_ptr = tb_ptr;
+        tci_tb_ptr = (uintptr_t)tb_ptr;
 #endif
         TCGOpcode opc = tb_ptr[0];
 #if !defined(NDEBUG)
