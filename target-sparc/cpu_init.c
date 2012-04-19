@@ -112,7 +112,9 @@ CPUSPARCState *cpu_sparc_init(const char *cpu_model)
     env = g_malloc0(sizeof(CPUSPARCState));
     cpu_exec_init(env);
 
-    gen_intermediate_code_init(env);
+    if (tcg_enabled()) {
+        gen_intermediate_code_init(env);
+    }
 
     if (cpu_sparc_register(env, cpu_model) < 0) {
         cpu_sparc_close(env);
