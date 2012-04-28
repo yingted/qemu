@@ -1048,13 +1048,17 @@ void cpu_x86_inject_mce(Monitor *mon, CPUState *cenv, int bank,
                         uint64_t misc, int flags);
 
 /* op_helper.c */
-void do_interrupt(CPUState *env);
-void do_interrupt_x86_hardirq(CPUState *env, int intno, int is_hw);
-void QEMU_NORETURN raise_exception_env(int exception_index, CPUState *nenv);
-void QEMU_NORETURN raise_exception_err_env(CPUState *nenv, int exception_index,
-                                           int error_code);
+void do_interrupt(CPUX86State *env);
+void do_interrupt_x86_hardirq(CPUX86State *env, int intno, int is_hw);
+void QEMU_NORETURN raise_exception(CPUX86State *env, int exception_index);
+void QEMU_NORETURN raise_exception_err(CPUX86State *env, int exception_index,
+                                       int error_code);
 
-void do_smm_enter(CPUState *env1);
+void do_smm_enter(CPUX86State *env1);
+
+void cpu_svm_check_intercept_param(CPUX86State *env1, uint32_t type,
+                                   uint64_t param);
+void cpu_vmexit(CPUX86State *nenv, uint32_t exit_code, uint64_t exit_info_1);
 
 void svm_check_intercept(CPUState *env1, uint32_t type);
 
