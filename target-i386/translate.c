@@ -1749,20 +1749,36 @@ static void gen_rotc_rm_T1(DisasContext *s, int ot, int op1,
     
     if (is_right) {
         switch (ot) {
-        case 0: gen_helper_rcrb(cpu_T[0], cpu_T[0], cpu_T[1]); break;
-        case 1: gen_helper_rcrw(cpu_T[0], cpu_T[0], cpu_T[1]); break;
-        case 2: gen_helper_rcrl(cpu_T[0], cpu_T[0], cpu_T[1]); break;
+        case 0:
+            gen_helper_rcrb(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
+        case 1:
+            gen_helper_rcrw(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
+        case 2:
+            gen_helper_rcrl(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
 #ifdef TARGET_X86_64
-        case 3: gen_helper_rcrq(cpu_T[0], cpu_T[0], cpu_T[1]); break;
+        case 3:
+            gen_helper_rcrq(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
 #endif
         }
     } else {
         switch (ot) {
-        case 0: gen_helper_rclb(cpu_T[0], cpu_T[0], cpu_T[1]); break;
-        case 1: gen_helper_rclw(cpu_T[0], cpu_T[0], cpu_T[1]); break;
-        case 2: gen_helper_rcll(cpu_T[0], cpu_T[0], cpu_T[1]); break;
+        case 0:
+            gen_helper_rclb(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
+        case 1:
+            gen_helper_rclw(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
+        case 2:
+            gen_helper_rcll(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
 #ifdef TARGET_X86_64
-        case 3: gen_helper_rclq(cpu_T[0], cpu_T[0], cpu_T[1]); break;
+        case 3:
+            gen_helper_rclq(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
+            break;
 #endif
         }
     }
@@ -4517,7 +4533,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                 break;
 #ifdef TARGET_X86_64
             case OT_QUAD:
-                gen_helper_mulq_EAX_T0(cpu_T[0]);
+                gen_helper_mulq_EAX_T0(cpu_env, cpu_T[0]);
                 s->cc_op = CC_OP_MULQ;
                 break;
 #endif
@@ -4587,7 +4603,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                 break;
 #ifdef TARGET_X86_64
             case OT_QUAD:
-                gen_helper_imulq_EAX_T0(cpu_T[0]);
+                gen_helper_imulq_EAX_T0(cpu_env, cpu_T[0]);
                 s->cc_op = CC_OP_MULQ;
                 break;
 #endif
@@ -4597,21 +4613,21 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             switch(ot) {
             case OT_BYTE:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_divb_AL(cpu_T[0]);
+                gen_helper_divb_AL(cpu_env, cpu_T[0]);
                 break;
             case OT_WORD:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_divw_AX(cpu_T[0]);
+                gen_helper_divw_AX(cpu_env, cpu_T[0]);
                 break;
             default:
             case OT_LONG:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_divl_EAX(cpu_T[0]);
+                gen_helper_divl_EAX(cpu_env, cpu_T[0]);
                 break;
 #ifdef TARGET_X86_64
             case OT_QUAD:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_divq_EAX(cpu_T[0]);
+                gen_helper_divq_EAX(cpu_env, cpu_T[0]);
                 break;
 #endif
             }
@@ -4620,21 +4636,21 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             switch(ot) {
             case OT_BYTE:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_idivb_AL(cpu_T[0]);
+                gen_helper_idivb_AL(cpu_env, cpu_T[0]);
                 break;
             case OT_WORD:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_idivw_AX(cpu_T[0]);
+                gen_helper_idivw_AX(cpu_env, cpu_T[0]);
                 break;
             default:
             case OT_LONG:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_idivl_EAX(cpu_T[0]);
+                gen_helper_idivl_EAX(cpu_env, cpu_T[0]);
                 break;
 #ifdef TARGET_X86_64
             case OT_QUAD:
                 gen_jmp_im(pc_start - s->cs_base);
-                gen_helper_idivq_EAX(cpu_T[0]);
+                gen_helper_idivq_EAX(cpu_env, cpu_T[0]);
                 break;
 #endif
             }
@@ -4847,7 +4863,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
 
 #ifdef TARGET_X86_64
         if (ot == OT_QUAD) {
-            gen_helper_imulq_T0_T1(cpu_T[0], cpu_T[0], cpu_T[1]);
+            gen_helper_imulq_T0_T1(cpu_T[0], cpu_env, cpu_T[0], cpu_T[1]);
         } else
 #endif
         if (ot == OT_LONG) {
@@ -6702,7 +6718,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             goto illegal_op;
         if (s->cc_op != CC_OP_DYNAMIC)
             gen_op_set_cc_op(s->cc_op);
-        gen_helper_daa();
+        gen_helper_daa(cpu_env);
         s->cc_op = CC_OP_EFLAGS;
         break;
     case 0x2f: /* das */
@@ -6710,7 +6726,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             goto illegal_op;
         if (s->cc_op != CC_OP_DYNAMIC)
             gen_op_set_cc_op(s->cc_op);
-        gen_helper_das();
+        gen_helper_das(cpu_env);
         s->cc_op = CC_OP_EFLAGS;
         break;
     case 0x37: /* aaa */
@@ -6718,7 +6734,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             goto illegal_op;
         if (s->cc_op != CC_OP_DYNAMIC)
             gen_op_set_cc_op(s->cc_op);
-        gen_helper_aaa();
+        gen_helper_aaa(cpu_env);
         s->cc_op = CC_OP_EFLAGS;
         break;
     case 0x3f: /* aas */
@@ -6726,7 +6742,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             goto illegal_op;
         if (s->cc_op != CC_OP_DYNAMIC)
             gen_op_set_cc_op(s->cc_op);
-        gen_helper_aas();
+        gen_helper_aas(cpu_env);
         s->cc_op = CC_OP_EFLAGS;
         break;
     case 0xd4: /* aam */
@@ -6736,7 +6752,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (val == 0) {
             gen_exception(s, EXCP00_DIVZ, pc_start - s->cs_base);
         } else {
-            gen_helper_aam(tcg_const_i32(val));
+            gen_helper_aam(cpu_env, tcg_const_i32(val));
             s->cc_op = CC_OP_LOGICB;
         }
         break;
@@ -6744,7 +6760,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (CODE64(s))
             goto illegal_op;
         val = ldub_code(s->pc++);
-        gen_helper_aad(tcg_const_i32(val));
+        gen_helper_aad(cpu_env, tcg_const_i32(val));
         s->cc_op = CC_OP_LOGICB;
         break;
         /************************/
