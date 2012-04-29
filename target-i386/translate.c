@@ -730,9 +730,15 @@ static void gen_check_io(DisasContext *s, int ot, target_ulong cur_eip,
         state_saved = 1;
         tcg_gen_trunc_tl_i32(cpu_tmp2_i32, cpu_T[0]);
         switch (ot) {
-        case 0: gen_helper_check_iob(cpu_tmp2_i32); break;
-        case 1: gen_helper_check_iow(cpu_tmp2_i32); break;
-        case 2: gen_helper_check_iol(cpu_tmp2_i32); break;
+        case 0:
+            gen_helper_check_iob(cpu_env, cpu_tmp2_i32);
+            break;
+        case 1:
+            gen_helper_check_iow(cpu_env, cpu_tmp2_i32);
+            break;
+        case 2:
+            gen_helper_check_iol(cpu_env, cpu_tmp2_i32);
+            break;
         }
     }
     if(s->flags & HF_SVMI_MASK) {
@@ -2712,7 +2718,7 @@ static void gen_debug(DisasContext *s, target_ulong cur_eip)
     if (s->cc_op != CC_OP_DYNAMIC)
         gen_op_set_cc_op(s->cc_op);
     gen_jmp_im(cur_eip);
-    gen_helper_debug();
+    gen_helper_debug(cpu_env);
     s->is_jmp = DISAS_TB_JUMP;
 }
 
@@ -2729,9 +2735,9 @@ static void gen_eob(DisasContext *s)
         gen_helper_reset_rf(cpu_env);
     }
     if (s->singlestep_enabled) {
-        gen_helper_debug();
+        gen_helper_debug(cpu_env);
     } else if (s->tf) {
-	gen_helper_single_step();
+        gen_helper_single_step(cpu_env);
     } else {
         tcg_gen_exit_tb(0);
     }
@@ -6807,7 +6813,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (s->cc_op != CC_OP_DYNAMIC)
             gen_op_set_cc_op(s->cc_op);
         gen_jmp_im(pc_start - s->cs_base);
-        gen_helper_into(tcg_const_i32(s->pc - pc_start));
+        gen_helper_into(cpu_env, tcg_const_i32(s->pc - pc_start));
         break;
 #ifdef WANT_ICEBP
     case 0xf1: /* icebp (undocumented, exits to external debugger) */
@@ -6964,9 +6970,9 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                 gen_op_set_cc_op(s->cc_op);
             gen_jmp_im(pc_start - s->cs_base);
             if (b & 2) {
-                gen_helper_rdmsr();
+                gen_helper_rdmsr(cpu_env);
             } else {
-                gen_helper_wrmsr();
+                gen_helper_wrmsr(cpu_env);
             }
         }
         break;
@@ -6976,7 +6982,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         gen_jmp_im(pc_start - s->cs_base);
         if (use_icount)
             gen_io_start();
-        gen_helper_rdtsc();
+        gen_helper_rdtsc(cpu_env);
         if (use_icount) {
             gen_io_end();
             gen_jmp(s, s->pc - s->cs_base);
@@ -6986,7 +6992,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (s->cc_op != CC_OP_DYNAMIC)
             gen_op_set_cc_op(s->cc_op);
         gen_jmp_im(pc_start - s->cs_base);
-        gen_helper_rdpmc();
+        gen_helper_rdpmc(cpu_env);
         break;
     case 0x134: /* sysenter */
         /* For Intel SYSENTER is valid on 64-bit */
@@ -7040,7 +7046,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
         if (s->cc_op != CC_OP_DYNAMIC)
             gen_op_set_cc_op(s->cc_op);
         gen_jmp_im(pc_start - s->cs_base);
-        gen_helper_cpuid();
+        gen_helper_cpuid(cpu_env);
         break;
     case 0xf4: /* hlt */
         if (s->cpl != 0) {
@@ -7049,7 +7055,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             if (s->cc_op != CC_OP_DYNAMIC)
                 gen_op_set_cc_op(s->cc_op);
             gen_jmp_im(pc_start - s->cs_base);
-            gen_helper_hlt(tcg_const_i32(s->pc - pc_start));
+            gen_helper_hlt(cpu_env, tcg_const_i32(s->pc - pc_start));
             s->is_jmp = DISAS_TB_JUMP;
         }
         break;
@@ -7161,7 +7167,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                             gen_op_andl_A0_ffff();
                     }
                     gen_add_A0_ds_seg(s);
-                    gen_helper_monitor(cpu_A0);
+                    gen_helper_monitor(cpu_env, cpu_A0);
                     break;
                 case 1: /* mwait */
                     if (!(s->cpuid_ext_features & CPUID_EXT_MONITOR) ||
@@ -7169,7 +7175,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                         goto illegal_op;
                     gen_update_cc_op(s);
                     gen_jmp_im(pc_start - s->cs_base);
-                    gen_helper_mwait(tcg_const_i32(s->pc - pc_start));
+                    gen_helper_mwait(cpu_env, tcg_const_i32(s->pc - pc_start));
                     gen_eob(s);
                     break;
                 default:
@@ -7309,7 +7315,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             } else {
                 gen_svm_check_intercept(s, pc_start, SVM_EXIT_WRITE_CR0);
                 gen_ldst_modrm(s, modrm, OT_WORD, OR_TMP0, 0);
-                gen_helper_lmsw(cpu_T[0]);
+                gen_helper_lmsw(cpu_env, cpu_T[0]);
                 gen_jmp_im(s->pc - s->cs_base);
                 gen_eob(s);
             }
@@ -7323,7 +7329,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                         gen_op_set_cc_op(s->cc_op);
                     gen_jmp_im(pc_start - s->cs_base);
                     gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
-                    gen_helper_invlpg(cpu_A0);
+                    gen_helper_invlpg(cpu_env, cpu_A0);
                     gen_jmp_im(s->pc - s->cs_base);
                     gen_eob(s);
                 }
@@ -7358,7 +7364,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                     gen_jmp_im(pc_start - s->cs_base);
                     if (use_icount)
                         gen_io_start();
-                    gen_helper_rdtscp();
+                    gen_helper_rdtscp(cpu_env);
                     if (use_icount) {
                         gen_io_end();
                         gen_jmp(s, s->pc - s->cs_base);
@@ -7540,11 +7546,12 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
                 gen_jmp_im(pc_start - s->cs_base);
                 if (b & 2) {
                     gen_op_mov_TN_reg(ot, 0, rm);
-                    gen_helper_write_crN(tcg_const_i32(reg), cpu_T[0]);
+                    gen_helper_write_crN(cpu_env, tcg_const_i32(reg),
+                                         cpu_T[0]);
                     gen_jmp_im(s->pc - s->cs_base);
                     gen_eob(s);
                 } else {
-                    gen_helper_read_crN(cpu_T[0], tcg_const_i32(reg));
+                    gen_helper_read_crN(cpu_T[0], cpu_env, tcg_const_i32(reg));
                     gen_op_mov_reg_T0(ot, rm);
                 }
                 break;
@@ -7573,7 +7580,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
             if (b & 2) {
                 gen_svm_check_intercept(s, pc_start, SVM_EXIT_WRITE_DR0 + reg);
                 gen_op_mov_TN_reg(ot, 0, rm);
-                gen_helper_movl_drN_T0(tcg_const_i32(reg), cpu_T[0]);
+                gen_helper_movl_drN_T0(cpu_env, tcg_const_i32(reg), cpu_T[0]);
                 gen_jmp_im(s->pc - s->cs_base);
                 gen_eob(s);
             } else {
