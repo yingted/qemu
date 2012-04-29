@@ -104,7 +104,7 @@ tcg/tcg.o: cpu.h
 
 # HELPER_CFLAGS is used for all the code compiled with static register
 # variables
-op_helper.o user-exec.o: QEMU_CFLAGS += $(HELPER_CFLAGS)
+user-exec.o: QEMU_CFLAGS += $(HELPER_CFLAGS)
 
 # Note: this is a workaround. The real fix is to avoid compiling
 # cpu_signal_handler() in user-exec.c.
@@ -119,7 +119,6 @@ QEMU_CFLAGS+=-I$(SRC_PATH)/linux-user/$(TARGET_ABI_DIR) -I$(SRC_PATH)/linux-user
 
 obj-y += linux-user/
 obj-y += gdbstub.o thunk.o user-exec.o $(oslib-obj-y)
-obj-i386-y += ioport-user.o
 obj-$(TARGET_ARM) += arm-semi.o
 obj-$(TARGET_M68K) += m68k-semi.o
 
@@ -167,7 +166,6 @@ obj-y = main.o bsdload.o elfload.o mmap.o signal.o strace.o syscall.o \
         gdbstub.o uaccess.o user-exec.o
 obj-y += bsd-user/
 obj-y += gdbstub.o user-exec.o
-obj-i386-y += ioport-user.o
 
 $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y): $(GENERATED_HEADERS)
 
