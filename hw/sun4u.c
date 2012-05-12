@@ -66,7 +66,6 @@
 
 #define KERNEL_LOAD_ADDR     0x00404000
 #define CMDLINE_ADDR         0x003ff000
-#define INITRD_LOAD_ADDR     0x00300000
 #define PROM_SIZE_MAX        (4 * 1024 * 1024)
 #define PROM_VADDR           0x000ffd00000ULL
 #define APB_SPECIAL_BASE     0x1fe00000000ULL
@@ -174,14 +173,18 @@ static int sun4u_NVRAM_set_params(M48t59State *nvram, uint16_t NVRAM_size,
 
     return 0;
 }
-static unsigned long sun4u_load_kernel(const char *kernel_filename,
-                                       const char *initrd_filename,
-                                       ram_addr_t RAM_size, long *initrd_size)
+
+static uint64_t sun4u_load_kernel(const char *kernel_filename,
+                                  const char *initrd_filename,
+                                  ram_addr_t RAM_size, uint64_t *initrd_size,
+                                  uint64_t *initrd_addr, uint64_t *kernel_addr,
+                                  uint64_t *kernel_entry)
 {
     int linux_boot;
     unsigned int i;
     long kernel_size;
     uint8_t *ptr;
+    uint64_t kernel_top;
 
     linux_boot = (kernel_filename != NULL);
 
@@ -194,29 +197,34 @@ static unsigned long sun4u_load_kernel(const char *kernel_filename,
 #else
         bswap_needed = 0;
 #endif
-        kernel_size = load_elf(kernel_filename, NULL, NULL, NULL,
-                               NULL, NULL, 1, ELF_MACHINE, 0);
-        if (kernel_size < 0)
+        kernel_size = load_elf(kernel_filename, NULL, NULL, kernel_entry,
+                               kernel_addr, &kernel_top, 1, ELF_MACHINE, 0);
+        if (kernel_size < 0) {
+            *kernel_addr = KERNEL_LOAD_ADDR;
+            *kernel_entry = KERNEL_LOAD_ADDR;
             kernel_size = load_aout(kernel_filename, KERNEL_LOAD_ADDR,
                                     RAM_size - KERNEL_LOAD_ADDR, bswap_needed,
                                     TARGET_PAGE_SIZE);
-        if (kernel_size < 0)
+        }
+        if (kernel_size < 0) {
             kernel_size = load_image_targphys(kernel_filename,
                                               KERNEL_LOAD_ADDR,
                                               RAM_size - KERNEL_LOAD_ADDR);
+        }
         if (kernel_size < 0) {
             fprintf(stderr, "qemu: could not load kernel '%s'\n",
                     kernel_filename);
             exit(1);
         }
-
-        /* load initrd */
+        /* load initrd above kernel */
         *initrd_size = 0;
         if (initrd_filename) {
+            *initrd_addr = TARGET_PAGE_ALIGN(kernel_top);
+
             *initrd_size = load_image_targphys(initrd_filename,
-                                               INITRD_LOAD_ADDR,
-                                               RAM_size - INITRD_LOAD_ADDR);
-            if (*initrd_size < 0) {
+                                               *initrd_addr,
+                                               RAM_size - *initrd_addr);
+            if ((int)*initrd_size < 0) {
                 fprintf(stderr, "qemu: could not load initial ram disk '%s'\n",
                         initrd_filename);
                 exit(1);
@@ -224,9 +232,9 @@ static unsigned long sun4u_load_kernel(const char *kernel_filename,
         }
         if (*initrd_size > 0) {
             for (i = 0; i < 64 * TARGET_PAGE_SIZE; i += TARGET_PAGE_SIZE) {
-                ptr = rom_ptr(KERNEL_LOAD_ADDR + i);
+                ptr = rom_ptr(*kernel_addr + i);
                 if (ldl_p(ptr + 8) == 0x48647253) { /* HdrS */
-                    stl_p(ptr + 24, INITRD_LOAD_ADDR + KERNEL_LOAD_ADDR - 0x4000);
+                    stl_p(ptr + 24, *initrd_addr + *kernel_addr);
                     stl_p(ptr + 28, *initrd_size);
                     break;
                 }
@@ -747,7 +755,7 @@ static void sun4uv_init(ram_addr_t RAM_size,
     CPUState *env;
     M48t59State *nvram;
     unsigned int i;
-    long initrd_size, kernel_size;
+    uint64_t initrd_addr, initrd_size, kernel_addr, kernel_size, kernel_entry;
     PCIBus *pci_bus, *pci_bus2, *pci_bus3;
     qemu_irq *irq;
     DriveInfo *hd[MAX_IDE_BUS * MAX_IDE_DEVS];
@@ -804,13 +812,15 @@ static void sun4uv_init(ram_addr_t RAM_size,
     nvram = m48t59_init_isa(0x0074, NVRAM_SIZE, 59);
 
     initrd_size = 0;
+    initrd_addr = 0;
     kernel_size = sun4u_load_kernel(kernel_filename, initrd_filename,
-                                    ram_size, &initrd_size);
+                                    ram_size, &initrd_size, &initrd_addr,
+                                    &kernel_addr, &kernel_entry);
 
     sun4u_NVRAM_set_params(nvram, NVRAM_SIZE, "Sun4u", RAM_size, boot_devices,
-                           KERNEL_LOAD_ADDR, kernel_size,
+                           kernel_addr, kernel_size,
                            kernel_cmdline,
-                           INITRD_LOAD_ADDR, initrd_size,
+                           initrd_addr, initrd_size,
                            /* XXX: need an option to load a NVRAM image */
                            0,
                            graphic_width, graphic_height, graphic_depth,
@@ -820,8 +830,8 @@ static void sun4uv_init(ram_addr_t RAM_size,
     fw_cfg_add_i32(fw_cfg, FW_CFG_ID, 1);
     fw_cfg_add_i64(fw_cfg, FW_CFG_RAM_SIZE, (uint64_t)ram_size);
     fw_cfg_add_i16(fw_cfg, FW_CFG_MACHINE_ID, hwdef->machine_id);
-    fw_cfg_add_i32(fw_cfg, FW_CFG_KERNEL_ADDR, KERNEL_LOAD_ADDR);
-    fw_cfg_add_i32(fw_cfg, FW_CFG_KERNEL_SIZE, kernel_size);
+    fw_cfg_add_i64(fw_cfg, FW_CFG_KERNEL_ADDR, kernel_entry);
+    fw_cfg_add_i64(fw_cfg, FW_CFG_KERNEL_SIZE, kernel_size);
     if (kernel_cmdline) {
         fw_cfg_add_i32(fw_cfg, FW_CFG_CMDLINE_SIZE,
                        strlen(kernel_cmdline) + 1);
@@ -831,8 +841,8 @@ static void sun4uv_init(ram_addr_t RAM_size,
     } else {
         fw_cfg_add_i32(fw_cfg, FW_CFG_CMDLINE_SIZE, 0);
     }
-    fw_cfg_add_i32(fw_cfg, FW_CFG_INITRD_ADDR, INITRD_LOAD_ADDR);
-    fw_cfg_add_i32(fw_cfg, FW_CFG_INITRD_SIZE, initrd_size);
+    fw_cfg_add_i64(fw_cfg, FW_CFG_INITRD_ADDR, initrd_addr);
+    fw_cfg_add_i64(fw_cfg, FW_CFG_INITRD_SIZE, initrd_size);
     fw_cfg_add_i16(fw_cfg, FW_CFG_BOOT_DEVICE, boot_devices[0]);
 
     fw_cfg_add_i16(fw_cfg, FW_CFG_SPARC64_WIDTH, graphic_width);
