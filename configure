@@ -3774,6 +3774,25 @@ if [ "$TARGET_BASE_ARCH" = "" ]; then
   TARGET_BASE_ARCH=$TARGET_ARCH
 fi
 
+mkdir -p $target_dir/fpu
+mkdir -p $target_dir/tcg
+mkdir -p $target_dir/9pfs
+mkdir -p $target_dir/hw
+mkdir -p $target_dir/hw/ide
+mkdir -p $target_dir/hw/usb
+mkdir -p $target_dir/hw/kvm
+mkdir -p $target_dir/hw/$TARGET_ARCH
+mkdir -p $target_dir/hw/$TARGET_BASE_ARCH
+mkdir -p $target_dir/target-$TARGET_BASE_ARCH
+if test "$target_linux_user" = yes; then
+  mkdir -p $target_dir/linux-user
+fi
+if test "$target_bsd_user" = yes; then
+  mkdir -p $target_dir/bsd-user
+fi
+if test "$target" = "arm-linux-user" -o "$target" = "armeb-linux-user" -o "$target" = "arm-bsd-user" -o "$target" = "armeb-bsd-user" ; then
+  mkdir -p $target_dir/linux-user/arm/nwfpe
+fi
 symlink "$source_path/Makefile.target" "$target_dir/Makefile"
 
 

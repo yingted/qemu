@@ -92,6 +92,9 @@ libobj-y += disas.o
 $(libobj-y): $(GENERATED_HEADERS)
 
 # libqemu
+obj-y += target-$(TARGET_BASE_ARCH)/
+
+tci-dis.o: QEMU_CFLAGS += -I$(SRC_PATH)/tcg -I$(SRC_PATH)/tcg/tci
 
 translate.o: translate.c cpu.h
 
@@ -124,6 +127,8 @@ obj-$(TARGET_HAS_BFLT) += flatload.o
 obj-$(TARGET_I386) += vm86.o
 
 obj-i386-y += ioport-user.o
+obj-y += linux-user/
+obj-y += gdbstub.o thunk.o user-exec.o $(oslib-obj-y)
 
 nwfpe-obj-y = fpa11.o fpa11_cpdo.o fpa11_cpdt.o fpa11_cprt.o fpopcode.o
 nwfpe-obj-y += single_cpdo.o double_cpdo.o extended_cpdo.o
@@ -180,6 +185,8 @@ obj-y = main.o bsdload.o elfload.o mmap.o signal.o strace.o syscall.o \
         gdbstub.o uaccess.o user-exec.o
 
 obj-i386-y += ioport-user.o
+obj-y += bsd-user/
+obj-y += gdbstub.o user-exec.o
 
 $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y): $(GENERATED_HEADERS)
 
@@ -193,7 +200,7 @@ endif #CONFIG_BSD_USER
 # System emulator target
 ifdef CONFIG_SOFTMMU
 
-obj-y = arch_init.o cpus.o monitor.o machine.o gdbstub.o balloon.o
+obj-y += arch_init.o cpus.o monitor.o machine.o gdbstub.o balloon.o ioport.o
 # virtio has to be here due to weird dependency between PCI and virtio-net.
 # need to fix this properly
 obj-$(CONFIG_NO_PCI) += pci-stub.o
@@ -329,13 +336,9 @@ obj-sparc-y = sun4u.o apb_pci.o
 obj-sparc-y += vga.o
 obj-sparc-y += mc146818rtc.o
 obj-sparc-y += cirrus_vga.o
+obj-y += hw/sparc64/
 else
-obj-sparc-y = sun4m.o lance.o tcx.o sun4m_iommu.o slavio_intctl.o
-obj-sparc-y += slavio_timer.o slavio_misc.o sparc32_dma.o
-obj-sparc-y += cs4231.o eccmemctl.o sbi.o sun4c_intctl.o leon3.o
-
-# GRLIB
-obj-sparc-y += grlib_gptimer.o grlib_irqmp.o grlib_apbuart.o
+obj-y += hw/$(TARGET_BASE_ARCH)/
 endif
 
 obj-arm-y = integratorcp.o versatilepb.o arm_pic.o arm_timer.o
@@ -376,6 +379,12 @@ obj-s390x-y = s390-virtio-bus.o s390-virtio.o
 
 obj-alpha-y = i8259.o mc146818rtc.o
 obj-alpha-y += vga.o cirrus_vga.o
+# Device tree
+ifeq ($(CONFIG_FDT), y)
+obj-$(TARGET_ARM) += device_tree.o
+obj-$(TARGET_MICROBLAZE) += device_tree.o
+obj-$(TARGET_PPC) += device_tree.o
+endif
 
 main.o: QEMU_CFLAGS+=$(GPROF_CFLAGS)
 
@@ -399,9 +408,19 @@ endif # CONFIG_LINUX_USER
 obj-y += $(addprefix ../, $(trace-obj-y))
 obj-$(CONFIG_GDBSTUB_XML) += gdbstub-xml.o
 
-$(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
-	$(call LINK,$(obj-y) $(obj-$(TARGET_BASE_ARCH)-y))
+nested-vars = obj-y
+dummy := $(call unnest-vars)
 
+ifdef QEMU_PROGW
+# The linker builds a windows executable. Make also a console executable.
+$(QEMU_PROGW): $(obj-y)
+	$(call LINK,$^)
+$(QEMU_PROG): $(QEMU_PROGW)
+	$(call quiet-command,$(OBJCOPY) --subsystem console $(QEMU_PROGW) $(QEMU_PROG),"  GEN   $(TARGET_DIR)$(QEMU_PROG)")
+else
+$(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
+	$(call LINK,$^)
+endif
 
 gdbstub-xml.c: $(TARGET_XML_FILES) $(SRC_PATH)/scripts/feature_to_c.sh
 	$(call quiet-command,rm -f $@ && $(SHELL) $(SRC_PATH)/scripts/feature_to_c.sh $@ $(TARGET_XML_FILES),"  GEN   $(TARGET_DIR)$@")
