@@ -206,16 +206,6 @@ static char io_mem_used[IO_MEM_NB_ENTRIES];
 static int io_mem_watch;
 #endif
 
-/* log support */
-#ifdef WIN32
-static const char *logfilename = "qemu.log";
-#else
-static const char *logfilename = "/tmp/qemu.log";
-#endif
-FILE *logfile;
-int loglevel;
-static int log_append = 0;
-
 /* statistics */
 #if !defined(CONFIG_USER_ONLY)
 static int tlb_flush_count;
