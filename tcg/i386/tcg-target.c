@@ -107,26 +107,6 @@ static void patch_reloc(uint8_t *code_ptr, int type,
     }
 }
 
-/* maximum number of register used for input function arguments */
-static inline int tcg_target_get_call_iarg_regs_count(int flags)
-{
-    if (TCG_TARGET_REG_BITS == 64) {
-        return 6;
-    }
-
-    flags &= TCG_CALL_TYPE_MASK;
-    switch(flags) {
-    case TCG_CALL_TYPE_STD:
-        return 0;
-    case TCG_CALL_TYPE_REGPARM_1:
-    case TCG_CALL_TYPE_REGPARM_2:
-    case TCG_CALL_TYPE_REGPARM:
-        return flags - TCG_CALL_TYPE_REGPARM_1 + 1;
-    default:
-        tcg_abort();
-    }
-}
-
 /* parse target specific constraints */
 static int target_parse_constraint(TCGArgConstraint *ct, const char **pct_str)
 {
