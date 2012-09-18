@@ -300,7 +300,7 @@ static const int tcg_target_reg_alloc_order[] = {
 #endif
 };
 
-#if MAX_OPC_PARAM_IARGS != 4
+#if MAX_OPC_PARAM_IARGS != 5
 # error Fix needed, number of supported input arguments changed!
 #endif
 
@@ -309,16 +309,18 @@ static const int tcg_target_call_iarg_regs[] = {
     TCG_REG_R1,
     TCG_REG_R2,
     TCG_REG_R3,
-#if TCG_TARGET_REG_BITS == 32
-    /* 32 bit hosts need 2 * MAX_OPC_PARAM_IARGS registers. */
 #if 0 /* used for TCG_REG_CALL_STACK */
     TCG_REG_R4,
 #endif
     TCG_REG_R5,
+#if TCG_TARGET_REG_BITS == 32
+    /* 32 bit hosts need 2 * MAX_OPC_PARAM_IARGS registers. */
     TCG_REG_R6,
     TCG_REG_R7,
 #if TCG_TARGET_NB_REGS >= 16
     TCG_REG_R8,
+    TCG_REG_R9,
+    TCG_REG_R10,
 #else
 # error Too few input registers available
 #endif
