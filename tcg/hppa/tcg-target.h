@@ -24,10 +24,6 @@
 
 #define TCG_TARGET_HPPA 1
 
-#if TCG_TARGET_REG_BITS != 32
-#error unsupported
-#endif
-
 #define TCG_TARGET_WORDS_BIGENDIAN
 
 #define TCG_TARGET_NB_REGS 32
