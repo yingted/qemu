@@ -972,9 +972,8 @@ multiwrite_f(int argc, char **argv)
 
 		optind = j + 1;
 
-		offset += reqs[i].qiov->size;
-		pattern++;
-	}
+        pattern++;
+    }
 
 	gettimeofday(&t1, NULL);
 	cnt = do_aio_multiwrite(reqs, nr_reqs, &total);
