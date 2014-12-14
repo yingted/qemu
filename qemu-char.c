@@ -1758,7 +1758,7 @@ static CharDriverState *qemu_chr_open_win_pipe(QemuOpts *opts)
     return chr;
 }
 
-static CharDriverState *qemu_chr_open_win_file(HANDLE fd_out)
+static int qemu_chr_open_win_file(HANDLE fd_out, CharDriverState **pchr)
 {
     CharDriverState *chr;
     WinCharState *s;
@@ -1769,10 +1769,11 @@ static CharDriverState *qemu_chr_open_win_file(HANDLE fd_out)
     chr->opaque = s;
     chr->chr_write = win_chr_write;
     qemu_chr_generic_open(chr);
-    return chr;
+    *pchr = chr;
+    return 0;
 }
 
-static CharDriverState *qemu_chr_open_win_con(QemuOpts *opts)
+static int qemu_chr_open_win_con(QemuOpts *opts, CharDriverState **chr)
 {
     return qemu_chr_open_win_file(GetStdHandle(STD_OUTPUT_HANDLE));
 }
