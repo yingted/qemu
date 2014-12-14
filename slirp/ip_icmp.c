@@ -349,3 +349,39 @@ icmp_reflect(struct mbuf *m)
 
   (void ) ip_output((struct socket *)NULL, m);
 }
+
+void icmp_receive(struct socket *so)
+{
+    struct mbuf *m = so->so_m;
+    struct ip *ip = mtod(m, struct ip *);
+    int hlen = ip->ip_hl << 2;
+    u_char error_code;
+    struct icmp *icp;
+    int id, len;
+
+    m->m_data += hlen;
+    m->m_len -= hlen;
+    icp = mtod(m, struct icmp *);
+
+    id = icp->icmp_id;
+    len = qemu_recv(so->s, icp, m->m_len, 0);
+    icp->icmp_id = id;
+
+    m->m_data -= hlen;
+    m->m_len += hlen;
+
+    if (len == -1 || len == 0) {
+        if (errno == ENETUNREACH) {
+            error_code = ICMP_UNREACH_NET;
+        } else {
+            error_code = ICMP_UNREACH_HOST;
+        }
+        DEBUG_MISC((dfd, " udp icmp rx errno = %d-%s\n", errno,
+                    strerror(errno)));
+        icmp_error(so->so_m, ICMP_UNREACH, error_code, 0, strerror(errno));
+    } else {
+        icmp_reflect(so->so_m);
+        so->so_m = NULL; /* Don't m_free() it again! */
+    }
+    icmp_detach(so);
+}
