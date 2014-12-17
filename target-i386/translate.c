@@ -3006,6 +3006,7 @@ static const SSEFunc_i_ep sse_op_table3bi[] = {
     gen_helper_cvttsd2si,
     X86_64_ONLY(gen_helper_cvttss2sq),
     X86_64_ONLY(gen_helper_cvttsd2sq),
+};
 
 #ifdef TARGET_X86_64
 static const SSEFunc_l_ep sse_op_table3bq[] = {
@@ -3014,6 +3015,7 @@ static const SSEFunc_l_ep sse_op_table3bq[] = {
     gen_helper_cvttsd2sq,
     gen_helper_cvtsd2sq
 };
+#endif
 
 static const SSEFunc_0_epp sse_op_table4[8][4] = {
     SSE_FOP(cmpeq),
