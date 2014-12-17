@@ -70,7 +70,7 @@ def main(args):
 
     try:
         opts, args = getopt.getopt(args[1:], "", long_opts)
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         error_opt(str(err))
 
     check_backend = False
@@ -90,8 +90,8 @@ def main(args):
             arg_format = arg
 
         elif opt == "--list-backends":
-            public_backends = tracetool.backend.get_list(only_public = True)
-            out(", ".join([ b for b,_ in public_backends ]))
+            backends = tracetool.backend.get_list()
+            out(", ".join([ b for b,_ in backends ]))
             sys.exit(0)
         elif opt == "--check-backend":
             check_backend = True
@@ -131,7 +131,7 @@ def main(args):
     try:
         tracetool.generate(sys.stdin, arg_format, arg_backend,
                            binary = binary, probe_prefix = probe_prefix)
-    except tracetool.TracetoolError, e:
+    except tracetool.TracetoolError as e:
         error_opt(str(e))
 
 if __name__ == "__main__":
