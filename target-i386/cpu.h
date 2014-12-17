@@ -788,9 +788,7 @@ typedef struct CPUX86State {
     TPRAccess tpr_access_type;
 } CPUX86State;
 
-#include "cpu-qom.h"
-
-X86CPU *cpu_x86_init(const char *cpu_model);
+CPUX86State *cpu_x86_init(const char *cpu_model);
 int cpu_x86_exec(CPUX86State *s);
 void x86_cpu_list (FILE *f, fprintf_function cpu_fprintf, const char *optarg);
 void x86_cpudef_setup(void);
@@ -906,7 +904,7 @@ int cpu_x86_signal_handler(int host_signum, void *pinfo,
 void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
                    uint32_t *eax, uint32_t *ebx,
                    uint32_t *ecx, uint32_t *edx);
-int cpu_x86_register(X86CPU *cpu, const char *cpu_model);
+int cpu_x86_register(CPUX86State *env, const char *cpu_model);
 void cpu_clear_apic_feature(CPUX86State *env);
 void host_cpuid(uint32_t function, uint32_t count,
                 uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
@@ -963,15 +961,6 @@ uint64_t cpu_get_tsc(CPUX86State *env);
 #define TARGET_PHYS_ADDR_SPACE_BITS 36
 #define TARGET_VIRT_ADDR_SPACE_BITS 32
 #endif
-
-static inline CPUX86State *cpu_init(const char *cpu_model)
-{
-    X86CPU *cpu = cpu_x86_init(cpu_model);
-    if (cpu == NULL) {
-        return NULL;
-    }
-    return &cpu->env;
-}
 
 #define cpu_init cpu_x86_init
 #define cpu_exec cpu_x86_exec
@@ -1082,8 +1071,8 @@ static inline void cpu_get_tb_cpu_state(CPUX86State *env, target_ulong *pc,
         (env->eflags & (IOPL_MASK | TF_MASK | RF_MASK | VM_MASK));
 }
 
-void do_cpu_init(X86CPU *cpu);
-void do_cpu_sipi(X86CPU *cpu);
+void do_cpu_init(CPUState *cpu);
+void do_cpu_sipi(CPUState *cpu);
 
 #define MCE_INJECT_BROADCAST    1
 #define MCE_INJECT_UNCOND_AO    2
