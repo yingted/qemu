@@ -112,9 +112,6 @@ RAMList ram_list = { .blocks = QLIST_HEAD_INITIALIZER(ram_list) };
 #endif
 
 CPUState *first_cpu;
-/* current CPU in the current thread. It is only valid inside
-   cpu_exec() */
-CPUState *cpu_single_env;
 /* 0 = Do not count executed instructions.
    1 = Precise instruction counting.
    2 = Adaptive rate instruction counting.  */

@@ -285,7 +285,7 @@ int cpu_exec(CPUState *env)
                     if (interrupt_request & CPU_INTERRUPT_INIT) {
                             cpu_svm_check_intercept_param(env, SVM_EXIT_INIT,
                                                           0);
-                            do_cpu_init(x86_env_get_cpu(env));
+                            do_cpu_init(env);
                             env->exception_index = EXCP_HALTED;
                             cpu_loop_exit(env);
                     } else if (interrupt_request & CPU_INTERRUPT_SIPI) {
