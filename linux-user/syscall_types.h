@@ -26,6 +26,7 @@ STRUCT(ifmap,
 
 /* The *_ifreq_list arrays deal with the fact that struct ifreq has unions */
 
+#if !defined(EMSCRIPTEN)
 STRUCT(sockaddr_ifreq,
        MK_ARRAY(TYPE_CHAR, IFNAMSIZ), MK_STRUCT(STRUCT_sockaddr))
 
@@ -44,6 +45,7 @@ STRUCT(char_ifreq,
 
 STRUCT(ptr_ifreq,
        MK_ARRAY(TYPE_CHAR, IFNAMSIZ), TYPE_PTRVOID)
+#endif
 
 STRUCT(ifconf,
        TYPE_INT, TYPE_PTRVOID)

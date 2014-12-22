@@ -51,17 +51,19 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 #include <sys/poll.h>
 #include <sys/times.h>
 #include <sys/shm.h>
-//#include <sys/sem.h>
+#if !defined(EMSCRIPTEN)
+#include <sys/sem.h>
+#endif
 #include <sys/statfs.h>
 #include <utime.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
-#define new_utsname utsname
-#define __NEW_UTS_LEN 64
 //#include <sys/user.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
-//#include <linux/wireless.h>
+#if !defined(EMSCRIPTEN)
+#include <linux/wireless.h>
+#endif
 #include <qemu-common.h>
 #ifdef TARGET_GPROF
 #include <sys/gmon.h>
@@ -72,6 +74,11 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 #ifdef CONFIG_EPOLL
 #include <sys/epoll.h>
 #endif
+#ifdef EMSCRIPTEN
+#define new_utsname utsname
+#define __NEW_UTS_LEN 64
+#define __sigset_t struct __sigset_t
+#endif
 
 #define termios host_termios
 #define winsize host_winsize
@@ -80,23 +87,28 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 #define tchars host_tchars /* same as target */
 #define ltchars host_ltchars /* same as target */
 
-//#include <linux/termios.h>
-//#include <linux/unistd.h>
-//#include <linux/utsname.h>
-//#include <linux/cdrom.h>
-//#include <linux/hdreg.h>
-//#include <linux/soundcard.h>
-//#include <linux/kd.h>
-//#include <linux/mtio.h>
-//#include <linux/fs.h>
+#if defined(EMSCRIPTEN)
 #include <sys/syscall.h>
 #include <sys/utsname.h>
+#else
+#include <linux/termios.h>
+#include <linux/unistd.h>
+#include <linux/utsname.h>
+#include <linux/cdrom.h>
+#include <linux/hdreg.h>
+#include <linux/soundcard.h>
+#include <linux/kd.h>
+#include <linux/mtio.h>
+#include <linux/fs.h>
+#endif
 #if defined(CONFIG_FIEMAP)
 #include <linux/fiemap.h>
 #endif
-//#include <linux/fb.h>
-//#include <linux/vt.h>
-//#include "linux_loop.h"
+#if !defined(EMSCRIPTEN)
+#include <linux/fb.h>
+#include <linux/vt.h>
+#include "linux_loop.h"
+#endif
 #include "cpu-uname.h"
 
 #include "qemu.h"
@@ -583,7 +595,7 @@ extern int personality(int);
 extern int flock(int, int);
 extern int setfsuid(int);
 extern int setfsgid(int);
-extern int setgroups(int, gid_t *);
+extern int setgroups(size_t, const gid_t *);
 
 /* ARM EABI and MIPS expect 64bit types aligned even on pairs or registers */
 #ifdef TARGET_ARM 
@@ -2355,6 +2367,7 @@ static inline abi_long host_to_target_ipc_perm(abi_ulong target_addr,
     return 0;
 }
 
+#if !defined(EMSCRIPTEN)
 static inline abi_long target_to_host_semid_ds(struct semid_ds *host_sd,
                                                abi_ulong target_addr)
 {
@@ -2386,6 +2399,7 @@ static inline abi_long host_to_target_semid_ds(abi_ulong target_addr,
     unlock_user_struct(target_sd, target_addr, 1);
     return 0;
 }
+#endif
 
 struct target_seminfo {
     int semmap;
@@ -2400,6 +2414,7 @@ struct target_seminfo {
     int semaem;
 };
 
+#if !defined(EMSCRIPTEN)
 static inline abi_long host_to_target_seminfo(abi_ulong target_addr,
                                               struct seminfo *host_seminfo)
 {
@@ -2419,6 +2434,7 @@ static inline abi_long host_to_target_seminfo(abi_ulong target_addr,
     unlock_user_struct(target_seminfo, target_addr, 1);
     return 0;
 }
+#endif
 
 union semun {
 	int val;
@@ -2434,6 +2450,7 @@ union target_semun {
 	abi_ulong __buf;
 };
 
+#if !defined(EMSCRIPTEN)
 static inline abi_long target_to_host_semarray(int semid, unsigned short **host_array,
                                                abi_ulong target_addr)
 {
@@ -2555,6 +2572,7 @@ static inline abi_long do_semctl(int semid, int semnum, int cmd,
 
     return ret;
 }
+#endif
 
 struct target_sembuf {
     unsigned short sem_num;
@@ -2562,6 +2580,7 @@ struct target_sembuf {
     short sem_flg;
 };
 
+#if !defined(EMSCRIPTEN)
 static inline abi_long target_to_host_sembuf(struct sembuf *host_sembuf,
                                              abi_ulong target_addr,
                                              unsigned nsops)
@@ -2594,6 +2613,7 @@ static inline abi_long do_semop(int semid, abi_long ptr, unsigned nsops)
 
     return semop(semid, sops, nsops);
 }
+#endif
 
 struct target_msqid_ds
 {
@@ -2852,6 +2872,7 @@ struct  target_shminfo {
     abi_ulong shmall;
 };
 
+#if !defined(EMSCRIPTEN)
 static inline abi_long host_to_target_shminfo(abi_ulong target_addr,
                                               struct shminfo *host_shminfo)
 {
@@ -2866,6 +2887,7 @@ static inline abi_long host_to_target_shminfo(abi_ulong target_addr,
     unlock_user_struct(target_shminfo, target_addr, 1);
     return 0;
 }
+#endif
 
 struct target_shm_info {
     int used_ids;
@@ -2876,6 +2898,7 @@ struct target_shm_info {
     abi_ulong swap_successes;
 };
 
+#if !defined(EMSCRIPTEN)
 static inline abi_long host_to_target_shm_info(abi_ulong target_addr,
                                                struct shm_info *host_shm_info)
 {
@@ -2930,6 +2953,7 @@ static inline abi_long do_shmctl(int shmid, int cmd, abi_long buf)
 
     return ret;
 }
+#endif
 
 static inline abi_ulong do_shmat(int shmid, abi_ulong shmaddr, int shmflg)
 {
@@ -3225,6 +3249,7 @@ static abi_long do_ioctl_fs_ioc_fiemap(const IOCTLEntry *ie, uint8_t *buf_temp,
 }
 #endif
 
+#if !defined(EMSCRIPTEN)
 static abi_long do_ioctl_ifconf(const IOCTLEntry *ie, uint8_t *buf_temp,
                                 int fd, abi_long cmd, abi_long arg)
 {
@@ -3318,6 +3343,7 @@ static abi_long do_ioctl_ifconf(const IOCTLEntry *ie, uint8_t *buf_temp,
 
     return ret;
 }
+#endif
 
 static IOCTLEntry ioctl_entries[] = {
 #define IOCTL(cmd, access, ...) \
