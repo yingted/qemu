@@ -631,6 +631,19 @@ int cpu_signal_handler(int host_signum, void *pinfo,
                              is_write, &uc->uc_sigmask, puc);
 }
 
+#elif defined(EMSCRIPTEN)
+
+int cpu_signal_handler(int host_signum, void *pinfo,
+                       void *puc)
+{
+    struct ucontext *uc = puc;
+    unsigned long pc = 0;
+    int is_write = 1;
+
+    return handle_cpu_signal(pc, 0,
+                             is_write, &uc->uc_sigmask, puc);
+}
+
 #else
 
 #error host CPU specific signal handler needed
