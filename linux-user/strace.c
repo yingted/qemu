@@ -2,7 +2,9 @@
 #include <errno.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#if !defined(EMSCRIPTEN)
 #include <sys/sem.h>
+#endif
 #include <sys/shm.h>
 #include <sys/select.h>
 #include <sys/types.h>
@@ -96,6 +98,7 @@ if( cmd == val ) { \
     output_cmd( SHM_STAT );
     output_cmd( SHM_INFO );
     /* semctl() commands */
+#if !defined(EMSCRIPTEN)
     output_cmd( GETPID );
     output_cmd( GETVAL );
     output_cmd( GETALL );
@@ -105,6 +108,7 @@ if( cmd == val ) { \
     output_cmd( SETALL );
     output_cmd( SEM_STAT );
     output_cmd( SEM_INFO );
+#endif
     output_cmd( IPC_RMID );
     output_cmd( IPC_RMID );
     output_cmd( IPC_RMID );
