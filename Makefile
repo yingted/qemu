@@ -401,7 +401,5 @@ tarbin:
 -include $(wildcard *.d audio/*.d slirp/*.d block/*.d net/*.d ui/*.d)
 
 unexport MAKEFLAGS MFLAGS MAKELEVEL
-3rdparty:
+3rdparty/zlib/libz.a:
 	cd 3rdparty/zlib && emconfigure ./configure && emmake make
-
-.PHONY: 3rdparty
