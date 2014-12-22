@@ -56,6 +56,8 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 #include <utime.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
+#define new_utsname utsname
+#define __NEW_UTS_LEN 64
 //#include <sys/user.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -87,6 +89,8 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 //#include <linux/kd.h>
 //#include <linux/mtio.h>
 //#include <linux/fs.h>
+#include <sys/syscall.h>
+#include <sys/utsname.h>
 #if defined(CONFIG_FIEMAP)
 #include <linux/fiemap.h>
 #endif
