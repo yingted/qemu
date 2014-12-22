@@ -399,3 +399,9 @@ tarbin:
 
 # Include automatically generated dependency files
 -include $(wildcard *.d audio/*.d slirp/*.d block/*.d net/*.d ui/*.d)
+
+unexport MAKEFLAGS MFLAGS MAKELEVEL
+3rdparty:
+	cd 3rdparty/zlib && emconfigure ./configure && emmake make
+
+.PHONY: 3rdparty

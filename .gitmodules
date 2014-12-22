@@ -13,3 +13,6 @@
 [submodule "roms/openbios"]
 	path = roms/openbios
 	url = git://git.qemu.org/openbios.git
+[submodule "3rdparty/zlib"]
+	path = 3rdparty/zlib
+	url = https://github.com/madler/zlib.git
