@@ -51,7 +51,7 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 #include <sys/poll.h>
 #include <sys/times.h>
 #include <sys/shm.h>
-#include <sys/sem.h>
+//#include <sys/sem.h>
 #include <sys/statfs.h>
 #include <utime.h>
 #include <sys/sysinfo.h>
@@ -59,7 +59,7 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 //#include <sys/user.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
-#include <linux/wireless.h>
+//#include <linux/wireless.h>
 #include <qemu-common.h>
 #ifdef TARGET_GPROF
 #include <sys/gmon.h>
@@ -78,21 +78,21 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 #define tchars host_tchars /* same as target */
 #define ltchars host_ltchars /* same as target */
 
-#include <linux/termios.h>
-#include <linux/unistd.h>
-#include <linux/utsname.h>
-#include <linux/cdrom.h>
-#include <linux/hdreg.h>
-#include <linux/soundcard.h>
-#include <linux/kd.h>
-#include <linux/mtio.h>
-#include <linux/fs.h>
+//#include <linux/termios.h>
+//#include <linux/unistd.h>
+//#include <linux/utsname.h>
+//#include <linux/cdrom.h>
+//#include <linux/hdreg.h>
+//#include <linux/soundcard.h>
+//#include <linux/kd.h>
+//#include <linux/mtio.h>
+//#include <linux/fs.h>
 #if defined(CONFIG_FIEMAP)
 #include <linux/fiemap.h>
 #endif
-#include <linux/fb.h>
-#include <linux/vt.h>
-#include "linux_loop.h"
+//#include <linux/fb.h>
+//#include <linux/vt.h>
+//#include "linux_loop.h"
 #include "cpu-uname.h"
 
 #include "qemu.h"
