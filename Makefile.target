@@ -126,7 +126,6 @@ obj-$(TARGET_HAS_BFLT) += flatload.o
 
 obj-$(TARGET_I386) += vm86.o
 
-obj-i386-y += ioport-user.o
 obj-y += linux-user/
 obj-y += gdbstub.o thunk.o user-exec.o $(oslib-obj-y)
 
@@ -162,8 +161,6 @@ LIBS+=-lmx
 obj-y = main.o commpage.o machload.o mmap.o signal.o syscall.o thunk.o \
         gdbstub.o user-exec.o
 
-obj-i386-y += ioport-user.o
-
 $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y): $(GENERATED_HEADERS)
 
 obj-y += $(addprefix ../libuser/, $(user-obj-y))
@@ -184,7 +181,6 @@ QEMU_CFLAGS+=-I$(SRC_PATH)/bsd-user -I$(SRC_PATH)/bsd-user/$(TARGET_ARCH)
 obj-y = main.o bsdload.o elfload.o mmap.o signal.o strace.o syscall.o \
         gdbstub.o uaccess.o user-exec.o
 
-obj-i386-y += ioport-user.o
 obj-y += bsd-user/
 obj-y += gdbstub.o user-exec.o
 
