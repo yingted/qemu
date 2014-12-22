@@ -396,6 +396,10 @@ $(QEMU_PROG): $(QEMU_PROGW)
 else
 $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(call LINK,$^)
+$(QEMU_PROG).bc: $(QEMU_PROG)
+	ln -s $< $@
+$(QEMU_PROG).js: $(QEMU_PROG).bc
+	emcc -O3 -o $@ $^
 endif
 
 gdbstub-xml.c: $(TARGET_XML_FILES) $(SRC_PATH)/scripts/feature_to_c.sh
