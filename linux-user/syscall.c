@@ -88,6 +88,7 @@ int __clone2(int (*fn)(void *), void *child_stack_base,
 #define ltchars host_ltchars /* same as target */
 
 #if defined(EMSCRIPTEN)
+#include <termios.h>
 #include <sys/syscall.h>
 #include <sys/utsname.h>
 #else
@@ -3526,7 +3527,9 @@ static const bitmask_transtbl cflag_tbl[] = {
 static const bitmask_transtbl lflag_tbl[] = {
 	{ TARGET_ISIG, TARGET_ISIG, ISIG, ISIG },
 	{ TARGET_ICANON, TARGET_ICANON, ICANON, ICANON },
+#if !defined(EMSCRIPTEN)
 	{ TARGET_XCASE, TARGET_XCASE, XCASE, XCASE },
+#endif
 	{ TARGET_ECHO, TARGET_ECHO, ECHO, ECHO },
 	{ TARGET_ECHOE, TARGET_ECHOE, ECHOE, ECHOE },
 	{ TARGET_ECHOK, TARGET_ECHOK, ECHOK, ECHOK },
@@ -6347,17 +6350,29 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
 #endif
 #ifdef TARGET_NR_semget
     case TARGET_NR_semget:
+#if defined(EMSCRIPTEN)
+        ret = -TARGET_EINVAL;
+#else
         ret = get_errno(semget(arg1, arg2, arg3));
+#endif
         break;
 #endif
 #ifdef TARGET_NR_semop
     case TARGET_NR_semop:
+#if defined(EMSCRIPTEN)
+        ret = -TARGET_EINVAL;
+#else
         ret = get_errno(do_semop(arg1, arg2, arg3));
+#endif
         break;
 #endif
 #ifdef TARGET_NR_semctl
     case TARGET_NR_semctl:
+#if defined(EMSCRIPTEN)
+        ret = -TARGET_EINVAL;
+#else
         ret = do_semctl(arg1, arg2, arg3, (union target_semun)(abi_ulong)arg4);
+#endif
         break;
 #endif
 #ifdef TARGET_NR_msgctl
@@ -6387,7 +6402,11 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
 #endif
 #ifdef TARGET_NR_shmctl
     case TARGET_NR_shmctl:
+#if defined(EMSCRIPTEN)
+        ret = -TARGET_EINVAL;
+#else
         ret = do_shmctl(arg1, arg2, arg3);
+#endif
         break;
 #endif
 #ifdef TARGET_NR_shmat
