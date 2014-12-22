@@ -115,6 +115,7 @@ QEMU_CFLAGS+=-I$(SRC_PATH)/linux-user/$(TARGET_ABI_DIR) -I$(SRC_PATH)/linux-user
 
 obj-y += linux-user/
 obj-y += gdbstub.o thunk.o user-exec.o $(oslib-obj-y)
+obj-y += qemu-malloc.o
 obj-$(TARGET_ARM) += arm-semi.o
 obj-$(TARGET_M68K) += m68k-semi.o
 
