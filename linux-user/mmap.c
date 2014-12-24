@@ -265,7 +265,7 @@ static abi_ulong mmap_find_vma_reserved(abi_ulong start, abi_ulong size)
 abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
 {
     void *ptr, *prev;
-    abi_ulong addr;
+    abi_ulong addr, mmapped_size, oversized;
     int wrapped, repeat;
 
     /* If 'start' == 0, then a default start address is used. */
@@ -285,6 +285,7 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
 
     addr = start;
     wrapped = repeat = 0;
+    oversized = 0;
     prev = 0;
 
     for (;; prev = ptr) {
@@ -295,6 +296,7 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
          *  - mremap() with MREMAP_FIXED flag
          *  - shmat() with SHM_REMAP flag
          */
+        mmapped_size = size;
         ptr = mmap(g2h(addr), size, PROT_NONE,
                    MAP_ANONYMOUS|MAP_PRIVATE|MAP_NORESERVE, -1, 0);
 
@@ -310,12 +312,13 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
         if (h2g_valid(ptr + size - 1)) {
             addr = h2g(ptr);
 
-            if ((addr & ~TARGET_PAGE_MASK) == 0) {
+            if ((addr & ~TARGET_PAGE_MASK) == 0
+                    || (oversized && ptr == prev)) {
                 /* Success.  */
                 if (start == mmap_next_start && addr >= TASK_UNMAPPED_BASE) {
                     mmap_next_start = addr + size;
                 }
-                return addr;
+                return addr + oversized;
             }
 
             /* The address is not properly aligned for the target.  */
@@ -335,6 +338,10 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
                 /* Start over at low memory.  */
                 addr = 0;
                 break;
+            case 3:
+                /* Maybe the kernel ignores the hint (e.g. emscripten) */
+                size += oversized = TARGET_PAGE_ALIGN(addr) - addr;
+                break;
             default:
                 /* Fail.  This unaligned block must the last.  */
                 addr = -1;
@@ -347,7 +354,7 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
         }
 
         /* Unmap and try again.  */
-        munmap(ptr, size);
+        munmap(ptr, mmapped_size);
 
         /* ENOMEM if we checked the whole of the target address space.  */
         if (addr == (abi_ulong)-1) {
