@@ -2909,7 +2909,11 @@ int main(int argc, char **argv, char **envp)
     {
         struct rlimit lim;
         if (getrlimit(RLIMIT_STACK, &lim) == 0
+#if defined(EMSCRIPTEN)
+            && false // emscripten returns RLIM_INFINITY, but only in the low 32 bits
+#else
             && lim.rlim_cur != RLIM_INFINITY
+#endif
             && lim.rlim_cur == (target_long)lim.rlim_cur) {
             guest_stack_size = lim.rlim_cur;
         }
