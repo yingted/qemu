@@ -451,7 +451,7 @@ abi_long target_mmap(abi_ulong start, abi_ulong len, int prot,
     }
 
     if (!(flags & MAP_FIXED)) {
-        abi_ulong mmap_start;
+        abi_ulong mmap_start, oversized;
         void *p;
         host_offset = offset & qemu_host_page_mask;
         host_len = len + offset - host_offset;
@@ -461,6 +461,7 @@ abi_long target_mmap(abi_ulong start, abi_ulong len, int prot,
             errno = ENOMEM;
             goto fail;
         }
+		host_len += oversized = TARGET_PAGE_ALIGN(mmap_start) - mmap_start;
         /* Note: we prefer to control the mapping address. It is
            especially important if qemu_host_page_size >
            qemu_real_host_page_size */
@@ -469,9 +470,9 @@ abi_long target_mmap(abi_ulong start, abi_ulong len, int prot,
         if (p == MAP_FAILED)
             goto fail;
         /* update start so that it points to the file position at 'offset' */
-        host_start = (unsigned long)p;
+        host_start = (unsigned long)p + oversized;
         if (!(flags & MAP_ANONYMOUS)) {
-            p = mmap(g2h(mmap_start), len, prot, 
+            p = mmap(g2h(mmap_start) + oversized, len, prot,
                      flags | MAP_FIXED, fd, host_offset);
             host_start += offset - host_offset;
         }
