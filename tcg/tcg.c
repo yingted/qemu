@@ -91,13 +91,13 @@ static inline void tcg_out8(TCGContext *s, uint8_t v)
 
 static inline void tcg_out16(TCGContext *s, uint16_t v)
 {
-    *(uint16_t *)s->code_ptr = v;
+    *(ALIGN(1,uint16_t) *)s->code_ptr = v;
     s->code_ptr += 2;
 }
 
 static inline void tcg_out32(TCGContext *s, uint32_t v)
 {
-    *(uint32_t *)s->code_ptr = v;
+    *(ALIGN(1,uint32_t) *)s->code_ptr = v;
     s->code_ptr += 4;
 }
 

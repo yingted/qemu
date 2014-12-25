@@ -388,7 +388,11 @@ static void patch_reloc(uint8_t *code_ptr, int type,
     assert(type == sizeof(tcg_target_long));
     assert(addend == 0);
     assert(value != 0);
+#if defined(EMSCRIPTEN)
+    memcpy(code_ptr, &value, sizeof(value));
+#else
     *(tcg_target_long *)code_ptr = value;
+#endif
 }
 
 /* Parse target specific constraints. */
@@ -423,14 +427,22 @@ void tci_disas(uint8_t opc)
 /* Write value (native size). */
 static void tcg_out_i(TCGContext *s, tcg_target_ulong v)
 {
+#if defined(EMSCRIPTEN)
+    memcpy(s->code_ptr, &v, sizeof(v));
+#else
     *(tcg_target_ulong *)s->code_ptr = v;
+#endif
     s->code_ptr += sizeof(tcg_target_ulong);
 }
 
 /* Write 64 bit value. */
 static void tcg_out64(TCGContext *s, uint64_t v)
 {
+#if defined(EMSCRIPTEN)
+    memcpy(s->code_ptr, &v, sizeof(v));
+#else
     *(uint64_t *)s->code_ptr = v;
+#endif
     s->code_ptr += sizeof(v);
 }
 

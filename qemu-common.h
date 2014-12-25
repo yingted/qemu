@@ -70,6 +70,15 @@ typedef struct Monitor Monitor;
 # error Unknown pointer size
 #endif
 
+#if defined(EMSCRIPTEN)
+# include <emscripten.h>
+# define ALIGN(amount,type) emscripten_align ## amount ## _ ## type
+typedef emscripten_align1_short emscripten_align1_uint16_t;
+typedef emscripten_align1_int emscripten_align1_uint32_t;
+#else
+# define ALIGN(amount,type) type
+#endif
+
 #ifndef CONFIG_IOVEC
 #define CONFIG_IOVEC
 struct iovec {
