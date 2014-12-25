@@ -1320,6 +1320,9 @@ static void probe_guest_base(const char *image_name,
     const char *errmsg;
     if (!have_guest_base && !reserved_va) {
         unsigned long host_start, real_start, host_size;
+#if defined(EMSCRIPTEN)
+        unsigned long oversized;
+#endif
 
         /* Round addresses to page boundaries.  */
         loaddr &= qemu_host_page_mask;
@@ -1357,6 +1360,12 @@ static void probe_guest_base(const char *image_name,
                address space randomization put a shared library somewhere
                inconvenient.  */
             munmap((void *)real_start, host_size);
+#if defined(EMSCRIPTEN)
+            host_start = real_start;
+            oversized = (HOST_PAGE_ALIGN(real_start) - real_start);
+            host_size = (hiaddr - loaddr) + oversized;
+            continue;
+#endif
             host_start += qemu_host_page_size;
             if (host_start == loaddr) {
                 /* Theoretically possible if host doesn't have any suitably
@@ -1365,6 +1374,9 @@ static void probe_guest_base(const char *image_name,
                 goto exit_errmsg;
             }
         }
+#if defined(EMSCRIPTEN)
+        real_start += oversized;
+#endif
         qemu_log("Relocating guest address space from 0x"
                  TARGET_ABI_FMT_lx " to 0x%lx\n",
                  loaddr, real_start);
