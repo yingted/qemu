@@ -195,7 +195,7 @@ extern TranslationBlock *tb_phys_hash[CODE_GEN_PHYS_HASH_SIZE];
 static inline void tb_set_jmp_target1(uintptr_t jmp_addr, uintptr_t addr)
 {
     /* patch the branch destination */
-    *(uint32_t *)jmp_addr = addr - (jmp_addr + 4);
+    *(ALIGN(1,uint32_t) *)jmp_addr = addr - (jmp_addr + 4);
     /* no need to flush icache explicitly */
 }
 #elif defined(_ARCH_PPC)

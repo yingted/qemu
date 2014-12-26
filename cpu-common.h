@@ -3,8 +3,12 @@
 
 /* CPU interfaces that are target indpendent.  */
 
-#if defined(__arm__) || defined(__sparc__) || defined(__mips__) || defined(__hppa__) || defined(__ia64__)
+#if defined(__arm__) || defined(__sparc__) || defined(__mips__) || defined(__hppa__) || defined(__ia64__) || defined(EMSCRIPTEN)
 #define WORDS_ALIGNED
+#endif
+#if defined(EMSCRIPTEN)
+// emscripten is slow
+#define TARGET_WORDS_ALIGNED
 #endif
 
 #ifdef TARGET_PHYS_ADDR_BITS
