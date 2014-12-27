@@ -189,7 +189,12 @@ static uint64_t tci_uint64(uint32_t high, uint32_t low)
 /* Read constant (native size) from bytecode. */
 static tcg_target_ulong tci_read_i(uint8_t **tb_ptr)
 {
+#if defined(WORDS_ALIGNED)
+    tcg_target_ulong value;
+    memcpy(&value, (void *)*tb_ptr, sizeof(tcg_target_ulong));
+#else
     tcg_target_ulong value = *(tcg_target_ulong *)(*tb_ptr);
+#endif
     *tb_ptr += sizeof(value);
     return value;
 }
