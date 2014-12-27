@@ -33,17 +33,31 @@ def main():
     print '''
 #ifndef _EMSCRIPTEN_DISPATCH_H_
 #define _EMSCRIPTEN_DISPATCH_H_
+
+#include <stdint.h>
+
 typedef enum {
 ''' % locals()
     for nr_eyes in xrange(0, 2**(typebits - 1), 1):
         eyes = 'i' * nr_eyes
         print '''
-    emscripten_func_v%(eyes)s,
-    emscripten_func_i%(eyes)s,
+    emscripten_func_type_v%(eyes)s,
+    emscripten_func_type_i%(eyes)s,
 ''' % locals()
     print '''
     QEMU_EMSCRIPTEN_FUNC_MAX
 } emscripten_func_type;
+''' % locals()
+
+    for nr_eyes in xrange(0, 2**(typebits - 1), 1):
+        eyes = 'i' * nr_eyes
+        types = ','.join(['tcg_target_ulong'] * nr_eyes) or 'void'
+        print '''
+typedef void (*emscripten_func_v%(eyes)s) (%(types)s);
+typedef uint64_t (*emscripten_func_i%(eyes)s) (%(types)s);
+''' % locals()
+
+    print '''
 
 #define QEMU_EMSCRIPTEN_FUNC_TYPE_BITS %(typebits)d
 #define QEMU_EMSCRIPTEN_FUNC_PTR_BITS (8 * sizeof(tcg_target_long) - QEMU_EMSCRIPTEN_FUNC_TYPE_BITS)
@@ -54,7 +68,7 @@ static inline tcg_target_long make_emscripten_func_packed(
             || (QEMU_EMSCRIPTEN_FUNC_MAX & (QEMU_EMSCRIPTEN_FUNC_MAX - 1)));
     assert(!(type & -QEMU_EMSCRIPTEN_FUNC_MAX));
     assert(!(em_ptr & (QEMU_EMSCRIPTEN_FUNC_MAX - 1)));
-    return em_ptr | (type << QEMU_EMSCRIPTEN_FUNC_PTR_BITS);
+    return em_ptr | (((tcg_target_long)type) << QEMU_EMSCRIPTEN_FUNC_PTR_BITS);
 }
 
 static inline emscripten_func_type get_emscripten_func_type(
@@ -63,7 +77,7 @@ static inline emscripten_func_type get_emscripten_func_type(
 }
 
 static inline emscripten_func_type make_emscripten_func_type(int has_ret, int nr_eyes) {
-	return (!!has_ret) | (nr_eyes << 1);
+    return (!!has_ret) | (nr_eyes << 1);
 }
 
 static inline emscripten_func_type get_emscripten_func_ptr(
@@ -71,14 +85,14 @@ static inline emscripten_func_type get_emscripten_func_ptr(
     return em_packed & (QEMU_EMSCRIPTEN_FUNC_PTR_BITS - 1);
 }
 #if defined(EMSCRIPTEN)
-#define %(name)s_CASE(em_arg_type,ret,func,...) \\
-        case emscripten_func_v ## em_arg_type: (func)(__VA_ARGS__); break; \\
-        case emscripten_func_i ## em_arg_type: (ret) = (func)(__VA_ARGS__); break;
+#define %(name)s_CASE(em_arg_type,func,ret,...) \\
+        case emscripten_func_type_v ## em_arg_type: ((emscripten_func_v ## em_arg_type)func)(__VA_ARGS__); break; \\
+        case emscripten_func_type_i ## em_arg_type: (ret) = ((emscripten_func_i ## em_arg_type)func)(__VA_ARGS__); break;
 ''' % locals()
 
     print '''
-#define %(name)s_CASE_0(ret,func) \\
-    %(name)s_CASE(,(ret),(func))
+#define %(name)s_CASE_0(func,ret) \\
+    %(name)s_CASE(,(func),(ret))
 
 ''' % locals()
 
@@ -124,7 +138,10 @@ static inline emscripten_func_type get_emscripten_func_ptr(
     print '''
 
 #define %(name)s(func,...) \\
-        switch (get_emscripten_func_type(func)) { %(name)s_CASES(func,__VA_ARGS__) }
+        switch (get_emscripten_func_type((tcg_target_long)(func))) { \\
+            %(name)s_CASES((func),__VA_ARGS__) \\
+            default: assert(!"Not enough arguments for call to " #func #__VA_ARGS__); \\
+        }
 
 #else
 #define %(name)s(%(args)s,...) \\
