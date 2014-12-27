@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  */
 #include "tcg.h"
+#include "emscripten-dispatch.h"
 
 int gen_new_label(void);
 
@@ -384,12 +385,27 @@ static inline int tcg_gen_sizemask(int n, int is_64bit, int is_signed)
     return (is_64bit << n*2) | (is_signed << (n*2 + 1));
 }
 
+static TCGv_ptr tcg_const_func_ptr(tcg_target_long func, int has_ret, int nargs,
+        int sizemask) {
+#if defined(EMSCRIPTEN)
+    int nwords = nargs, i;
+    for (i = 0; i < nargs; ++i)
+        if (sizemask & (1 << ((i+1)*2)))
+            ++nwords;
+    func = make_emscripten_func_packed(func, make_emscripten_func_type(has_ret, nwords));
+#endif
+    return tcg_const_ptr(func);
+}
+#define tcg_const_func_ptr(func, ret, nargs, sizemask) \
+    (tcg_const_func_ptr((func), (ret != TCG_CALL_DUMMY_ARG), (nargs), \
+                        (sizemask)))
+
 /* helper calls */
 static inline void tcg_gen_helperN(void *func, int flags, int sizemask,
                                    TCGArg ret, int nargs, TCGArg *args)
 {
     TCGv_ptr fn;
-    fn = tcg_const_ptr((tcg_target_long)func);
+    fn = tcg_const_func_ptr((tcg_target_long)func, ret, nargs, sizemask);
     tcg_gen_callN(&tcg_ctx, fn, flags, sizemask, ret,
                   nargs, args);
     tcg_temp_free_ptr(fn);
@@ -405,7 +421,8 @@ static inline void tcg_gen_helper32(void *func, int sizemask, TCGv_i32 ret,
 {
     TCGv_ptr fn;
     TCGArg args[2];
-    fn = tcg_const_ptr((tcg_target_long)func);
+    fn = tcg_const_func_ptr((tcg_target_long)func, GET_TCGV_I32(ret), 2,
+            sizemask);
     args[0] = GET_TCGV_I32(a);
     args[1] = GET_TCGV_I32(b);
     tcg_gen_callN(&tcg_ctx, fn, TCG_CALL_CONST | TCG_CALL_PURE, sizemask,
@@ -418,7 +435,8 @@ static inline void tcg_gen_helper64(void *func, int sizemask, TCGv_i64 ret,
 {
     TCGv_ptr fn;
     TCGArg args[2];
-    fn = tcg_const_ptr((tcg_target_long)func);
+    fn = tcg_const_func_ptr((tcg_target_long)func, GET_TCGV_I64(ret), 2,
+            sizemask);
     args[0] = GET_TCGV_I64(a);
     args[1] = GET_TCGV_I64(b);
     tcg_gen_callN(&tcg_ctx, fn, TCG_CALL_CONST | TCG_CALL_PURE, sizemask,

@@ -28,6 +28,7 @@
 #include "dyngen-exec.h"        /* env */
 #include "exec-all.h"           /* MAX_OPC_PARAM_IARGS */
 #include "tcg-op.h"
+#include "emscripten-dispatch.h"
 
 /* Marker for missing code. */
 #define TODO() \
@@ -506,24 +507,26 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
         case INDEX_op_call:
             t0 = tci_read_ri(&tb_ptr);
 #if TCG_TARGET_REG_BITS == 32
-            tmp64 = ((helper_function)t0)(tci_read_reg(TCG_REG_R0),
-                                          tci_read_reg(TCG_REG_R1),
-                                          tci_read_reg(TCG_REG_R2),
-                                          tci_read_reg(TCG_REG_R3),
-                                          tci_read_reg(TCG_REG_R5),
-                                          tci_read_reg(TCG_REG_R6),
-                                          tci_read_reg(TCG_REG_R7),
-                                          tci_read_reg(TCG_REG_R8),
-                                          tci_read_reg(TCG_REG_R9),
-                                          tci_read_reg(TCG_REG_R10));
+            QEMU_EMSCRIPTEN_CALL((helper_function)t0, tmp64,
+                    tci_read_reg(TCG_REG_R0),
+                    tci_read_reg(TCG_REG_R1),
+                    tci_read_reg(TCG_REG_R2),
+                    tci_read_reg(TCG_REG_R3),
+                    tci_read_reg(TCG_REG_R5),
+                    tci_read_reg(TCG_REG_R6),
+                    tci_read_reg(TCG_REG_R7),
+                    tci_read_reg(TCG_REG_R8),
+                    tci_read_reg(TCG_REG_R9),
+                    tci_read_reg(TCG_REG_R10));
             tci_write_reg(TCG_REG_R0, tmp64);
             tci_write_reg(TCG_REG_R1, tmp64 >> 32);
 #else
-            tmp64 = ((helper_function)t0)(tci_read_reg(TCG_REG_R0),
-                                          tci_read_reg(TCG_REG_R1),
-                                          tci_read_reg(TCG_REG_R2),
-                                          tci_read_reg(TCG_REG_R3),
-                                          tci_read_reg(TCG_REG_R5));
+            QEMU_EMSCRIPTEN_CALL((helper_function)t0, tmp64,
+                    tci_read_reg(TCG_REG_R0),
+                    tci_read_reg(TCG_REG_R1),
+                    tci_read_reg(TCG_REG_R2),
+                    tci_read_reg(TCG_REG_R3),
+                    tci_read_reg(TCG_REG_R5));
             tci_write_reg(TCG_REG_R0, tmp64);
 #endif
             break;

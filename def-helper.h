@@ -78,7 +78,12 @@
 #define dh_is_64bit_void 0
 #define dh_is_64bit_i32 0
 #define dh_is_64bit_i64 1
+#if defined(EMSCRIPTEN)
+// We might use 32-bit pointers but 64-bit regs on emscripten
+#define dh_is_64bit_ptr 0
+#else
 #define dh_is_64bit_ptr (TCG_TARGET_REG_BITS == 64)
+#endif
 #define dh_is_64bit(t) glue(dh_is_64bit_, dh_alias(t))
 
 #define dh_is_signed_void 0
