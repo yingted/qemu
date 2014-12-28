@@ -1168,11 +1168,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if defined(TARGET_WORDS_ALIGNED)
-            tmp16 = tswap16(*(uint16_t *)(host_addr + GUEST_BASE));
-#else
             tmp16 = tswap16(*(ALIGN(1,uint16_t) *)(host_addr + GUEST_BASE));
-#endif
 #endif
             tci_write_reg16(t0, tmp16);
             break;
@@ -1184,11 +1180,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if defined(TARGET_WORDS_ALIGNED)
-            tmp16 = tswap16(*(uint16_t *)(host_addr + GUEST_BASE));
-#else
             tmp16 = tswap16(*(ALIGN(1,uint16_t) *)(host_addr + GUEST_BASE));
-#endif
 #endif
             tci_write_reg16s(t0, tmp16);
             break;
@@ -1213,11 +1205,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if defined(TARGET_WORDS_ALIGNED)
-            tmp32 = tswap32(*(uint32_t *)(host_addr + GUEST_BASE));
-#else
             tmp32 = tswap32(*(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE));
-#endif
 #endif
             tci_write_reg32s(t0, tmp32);
             break;
@@ -1230,11 +1218,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if defined(TARGET_WORDS_ALIGNED)
-            tmp32 = tswap32(*(uint32_t *)(host_addr + GUEST_BASE));
-#else
             tmp32 = tswap32(*(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE));
-#endif
 #endif
             tci_write_reg32(t0, tmp32);
             break;
