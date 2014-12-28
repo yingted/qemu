@@ -590,10 +590,10 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
             t0 = *tb_ptr++;
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            tci_write_reg32(t0, *(ALIGN(1,uint32_t) *)(t1 + t2));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             tci_write_reg32(t0, *(uint32_t *)(t1 + t2));
+#else
+            tci_write_reg32(t0, *(ALIGN(1,uint32_t) *)(t1 + t2));
 #endif
             break;
         case INDEX_op_st8_i32:
@@ -606,20 +606,20 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
             t0 = tci_read_r16(&tb_ptr);
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            *(ALIGN(1,uint16_t) *)(t1 + t2) = t0;
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             *(uint16_t *)(t1 + t2) = t0;
+#else
+            *(ALIGN(1,uint16_t) *)(t1 + t2) = t0;
 #endif
             break;
         case INDEX_op_st_i32:
             t0 = tci_read_r32(&tb_ptr);
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            *(ALIGN(1,uint32_t) *)(t1 + t2) = t0;
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             *(uint32_t *)(t1 + t2) = t0;
+#else
+            *(ALIGN(1,uint32_t) *)(t1 + t2) = t0;
 #endif
             break;
 
@@ -868,31 +868,31 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
             t0 = *tb_ptr++;
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            tci_write_reg32(t0, *(ALIGN(1,uint32_t) *)(t1 + t2));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             tci_write_reg32(t0, *(uint32_t *)(t1 + t2));
+#else
+            tci_write_reg32(t0, *(ALIGN(1,uint32_t) *)(t1 + t2));
 #endif
             break;
         case INDEX_op_ld32s_i64:
             t0 = *tb_ptr++;
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            tci_write_reg32s(t0, *(ALIGN(1,int32_t) *)(t1 + t2));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             tci_write_reg32s(t0, *(int32_t *)(t1 + t2));
+#else
+            tci_write_reg32s(t0, *(ALIGN(1,int32_t) *)(t1 + t2));
 #endif
             break;
         case INDEX_op_ld_i64:
             t0 = *tb_ptr++;
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
+#if defined(TARGET_WORDS_ALIGNED)
+            tci_write_reg64(t0, *(uint64_t *)(t1 + t2));
+#else
             memcpy(&tmp64, (void *)(t1 + t2), sizeof(uint64_t));
             tci_write_reg64(t0, tmp64);
-#else
-            tci_write_reg64(t0, *(uint64_t *)(t1 + t2));
 #endif
             break;
         case INDEX_op_st8_i64:
@@ -905,30 +905,30 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
             t0 = tci_read_r16(&tb_ptr);
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            *(ALIGN(1,uint16_t) *)(t1 + t2) = t0;
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             *(uint16_t *)(t1 + t2) = t0;
+#else
+            *(ALIGN(1,uint16_t) *)(t1 + t2) = t0;
 #endif
             break;
         case INDEX_op_st32_i64:
             t0 = tci_read_r32(&tb_ptr);
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            *(ALIGN(1,uint32_t) *)(t1 + t2) = t0;
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             *(uint32_t *)(t1 + t2) = t0;
+#else
+            *(ALIGN(1,uint32_t) *)(t1 + t2) = t0;
 #endif
             break;
         case INDEX_op_st_i64:
             t0 = tci_read_r64(&tb_ptr);
             t1 = tci_read_r(&tb_ptr);
             t2 = tci_read_i32(&tb_ptr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            memcpy((void *)(t1 + t2), &t0, sizeof(uint64_t));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             *(uint64_t *)(t1 + t2) = t0;
+#else
+            memcpy((void *)(t1 + t2), &t0, sizeof(uint64_t));
 #endif
             break;
 
@@ -1168,10 +1168,10 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            tmp16 = tswap16(*(ALIGN(1,uint16_t) *)(host_addr + GUEST_BASE));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             tmp16 = tswap16(*(uint16_t *)(host_addr + GUEST_BASE));
+#else
+            tmp16 = tswap16(*(ALIGN(1,uint16_t) *)(host_addr + GUEST_BASE));
 #endif
 #endif
             tci_write_reg16(t0, tmp16);
@@ -1184,10 +1184,10 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            tmp16 = tswap16(*(ALIGN(1,uint16_t) *)(host_addr + GUEST_BASE));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             tmp16 = tswap16(*(uint16_t *)(host_addr + GUEST_BASE));
+#else
+            tmp16 = tswap16(*(ALIGN(1,uint16_t) *)(host_addr + GUEST_BASE));
 #endif
 #endif
             tci_write_reg16s(t0, tmp16);
@@ -1201,11 +1201,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
             tmp32 = tswap32(*(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE));
-#else
-            tmp32 = tswap32(*(uint32_t *)(host_addr + GUEST_BASE));
-#endif
 #endif
             tci_write_reg32(t0, tmp32);
             break;
@@ -1217,10 +1213,10 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            tmp32 = tswap32(*(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             tmp32 = tswap32(*(uint32_t *)(host_addr + GUEST_BASE));
+#else
+            tmp32 = tswap32(*(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE));
 #endif
 #endif
             tci_write_reg32s(t0, tmp32);
@@ -1234,10 +1230,10 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
-            tmp32 = tswap32(*(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE));
-#else
+#if defined(TARGET_WORDS_ALIGNED)
             tmp32 = tswap32(*(uint32_t *)(host_addr + GUEST_BASE));
+#else
+            tmp32 = tswap32(*(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE));
 #endif
 #endif
             tci_write_reg32(t0, tmp32);
@@ -1253,7 +1249,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
+#if defined(WORDS_ALIGNED)
             memcpy(&tmp64, (void *)(host_addr + GUEST_BASE), sizeof(uint64_t));
             tmp64 = tswap64(tmp64);
 #else
@@ -1286,11 +1282,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
             *(ALIGN(1,uint16_t) *)(host_addr + GUEST_BASE) = tswap16(t0);
-#else
-            *(uint16_t *)(host_addr + GUEST_BASE) = tswap16(t0);
-#endif
 #endif
             break;
         case INDEX_op_qemu_st32:
@@ -1302,11 +1294,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
             *(ALIGN(1,uint32_t) *)(host_addr + GUEST_BASE) = tswap32(t0);
-#else
-            *(uint32_t *)(host_addr + GUEST_BASE) = tswap32(t0);
-#endif
 #endif
             break;
         case INDEX_op_qemu_st64:
@@ -1318,7 +1306,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
 #else
             host_addr = (tcg_target_ulong)taddr;
             assert(taddr == host_addr);
-#if !defined(TARGET_WORDS_ALIGNED)
+#if defined(WORDS_ALIGNED)
             tmp64 = tswap64(tmp64);
             memcpy((void *)(host_addr + GUEST_BASE), &tmp64, sizeof(uint64_t));
 #else
