@@ -507,7 +507,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
         case INDEX_op_call:
             t0 = tci_read_ri(&tb_ptr);
 #if TCG_TARGET_REG_BITS == 32
-            QEMU_EMSCRIPTEN_CALL((helper_function)t0, tmp64,
+            QEMU_EMSCRIPTEN_CALL(helper_function, t0, tmp64,
                     tci_read_reg(TCG_REG_R0),
                     tci_read_reg(TCG_REG_R1),
                     tci_read_reg(TCG_REG_R2),
@@ -521,7 +521,7 @@ unsigned long tcg_qemu_tb_exec(CPUState *cpustate, uint8_t *tb_ptr)
             tci_write_reg(TCG_REG_R0, tmp64);
             tci_write_reg(TCG_REG_R1, tmp64 >> 32);
 #else
-            QEMU_EMSCRIPTEN_CALL((helper_function)t0, tmp64,
+            QEMU_EMSCRIPTEN_CALL(helper_function, t0, tmp64,
                     tci_read_reg(TCG_REG_R0),
                     tci_read_reg(TCG_REG_R1),
                     tci_read_reg(TCG_REG_R2),

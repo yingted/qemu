@@ -388,7 +388,7 @@ static inline int tcg_gen_sizemask(int n, int is_64bit, int is_signed)
 static TCGv_ptr tcg_const_func_ptr(tcg_target_long func, int has_ret, int nargs,
         int sizemask) {
 #if defined(EMSCRIPTEN)
-    func = make_emscripten_func_packed(func, make_emscripten_func_type(has_ret, nargs));
+    func = make_emscripten_func_packed(func, make_emscripten_func_type(has_ret, nargs, sizemask));
 #endif
     return tcg_const_ptr(func);
 }
