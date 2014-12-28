@@ -24,7 +24,7 @@ import itertools
 
 def main():
     cpp_maxargs = 127
-    typebits = 7
+    typebits = 8
     _max_nargs = [None]
     def all_types():
         for nargs in itertools.count():
@@ -127,14 +127,18 @@ static inline emscripten_func_type make_emscripten_func_type(int has_ret,
     prev_extras = eyes = ''
     for i in xrange(1, maxcall):
         prev_i = i - 1
-        eyes += 'i'
         extras = prev_extras + ',(a%d)' % i
         plain_extras = extras.replace('(', '').replace(')', '')
         print '''
 #define %(name)s_CASE_%(i)d(%(args)s%(plain_extras)s) \\
-    %(name)s_CASE_%(prev_i)d(%(protected_args)s%(prev_extras)s) \\
-    %(name)s_CASE(%(eyes)s,%(protected_args)s%(extras)s)
+    %(name)s_CASE_%(prev_i)d(%(protected_args)s%(prev_extras)s) \\\
 ''' % locals()
+        for ret, eyes in all_types:
+            if ret == 'v' and len(eyes) == i:
+                print '''\
+    %(name)s_CASE(%(eyes)s,%(protected_args)s%(extras)s) \\\
+''' % locals()
+        print
         prev_extras = extras
 
     numbers = ','.join(map(str,reversed(xrange(maxcall))))
