@@ -446,7 +446,9 @@ static void tlb_unprotect_code_phys(CPUState *env, ram_addr_t ram_addr,
 #define mmap_unlock() do { } while(0)
 #endif
 
+#if !defined(DEFAULT_CODE_GEN_BUFFER_SIZE)
 #define DEFAULT_CODE_GEN_BUFFER_SIZE (32 * 1024 * 1024)
+#endif
 
 #if defined(CONFIG_USER_ONLY)
 /* Currently it is not recommended to allocate big chunks of data in
