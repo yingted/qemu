@@ -822,6 +822,9 @@ static TCGHelperInfo *tcg_find_helper(TCGContext *s, tcg_target_ulong val)
     int m, m_min, m_max;
     TCGHelperInfo *th;
     tcg_target_ulong v;
+#if defined(EMSCRIPTEN)
+    val = get_emscripten_func_ptr(val);
+#endif
 
     if (unlikely(!s->helpers_sorted)) {
         qsort(s->helpers, s->nb_helpers, sizeof(TCGHelperInfo), 

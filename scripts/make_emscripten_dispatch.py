@@ -81,7 +81,7 @@ static inline emscripten_func_type get_emscripten_func_type(
     return ((tcg_target_ulong)em_packed) >> (tcg_target_ulong)QEMU_EMSCRIPTEN_FUNC_PTR_BITS;
 }
 
-static inline emscripten_func_type get_emscripten_func_ptr(
+static inline tcg_target_long get_emscripten_func_ptr(
         tcg_target_long em_packed) {
     return em_packed & (QEMU_EMSCRIPTEN_FUNC_PTR_BITS - 1);
 }
@@ -96,13 +96,13 @@ static inline tcg_target_long make_emscripten_func_packed(
 }
 
 static inline emscripten_func_type make_emscripten_func_type(int has_ret,
-        int nargs, const int sizemask) {
-    tcg_target_ulong args_type = 0, base_args = (((tcg_target_ulong)1) << nargs) - 1;
+        int nargs, int sizemask) {
+    tcg_target_ulong args_type = 1;
+    unsigned args_ret = (tcg_target_ulong)(has_ret ? sizemask & 1 ? 1 : 2 : 3);
     assert(0 <= nargs && nargs < %(max_nargs)s);
-    while (nargs)
-        if (sizemask & (1 << 2*nargs--))
-            args_type |= 1 << nargs;
-    return (args_type + base_args) * (tcg_target_ulong)3 + (tcg_target_ulong)(has_ret ? sizemask & 1 ? 2 : 1 : 0);
+    while (nargs--)
+        args_type = (args_type << 1) | ((sizemask >>= 2) & 1);
+    return args_type * (tcg_target_ulong)3 - args_ret;
 }
 
 #if defined(EMSCRIPTEN)
